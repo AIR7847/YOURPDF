@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>YOURPDF – Dashboard</title>
+<title>YOURPDF – Admin Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -71,9 +71,23 @@ footer{
 
 <body>
 
+<!-- 🔐 ADMIN PASSWORD GATE (MUST BE FIRST THING IN BODY) -->
+<script>
+(function () {
+  const PASSWORD = "Ashayadav";   // 🔑 change if you want
+  const input = prompt("Admin password:");
+
+  if (input !== PASSWORD) {
+    alert("Access denied");
+    document.body.innerHTML = "";
+    throw new Error("Unauthorized access blocked");
+  }
+})();
+</script>
+
 <header>
   <h1>YOURPDF – Dashboard</h1>
-  <div>Live usage statistics</div>
+  <div>Live usage statistics (Admin only)</div>
 </header>
 
 <main>
@@ -133,7 +147,9 @@ async function loadStats(){
     const row = document.createElement("div");
     row.innerHTML = `
       <div>${key} – ${count}</div>
-      <div class="bar"><span style="width:${percent}%"></span></div>
+      <div class="bar">
+        <span style="width:${percent}%"></span>
+      </div>
     `;
     netBox.appendChild(row);
   }
