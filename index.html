@@ -291,8 +291,12 @@ footer{
 </footer>
   <script>
 let sessionStart = Date.now();
+let sessionSent = false;   // 🔒 important flag
 
 function sendSession(reason){
+  if (sessionSent) return; // already sent → stop
+  sessionSent = true;
+
   const duration = Math.round((Date.now() - sessionStart) / 1000);
 
   const data = {
@@ -309,12 +313,14 @@ function sendSession(reason){
   );
 }
 
+// Tab close / refresh
 window.addEventListener("beforeunload", () => {
   sendSession("close");
 });
 
+// Tab background (only if not already sent)
 document.addEventListener("visibilitychange", () => {
-  if(document.visibilityState === "hidden"){
+  if (document.visibilityState === "hidden") {
     sendSession("hidden");
   }
 });
