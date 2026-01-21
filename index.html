@@ -289,6 +289,36 @@ footer{
 <footer>
   © YOURPDF • KD(Creator) • Privacy-first
 </footer>
+  <script>
+let sessionStart = Date.now();
+
+function sendSession(reason){
+  const duration = Math.round((Date.now() - sessionStart) / 1000);
+
+  const data = {
+    duration: duration,
+    reason: reason,
+    userAgent: navigator.userAgent,
+    screen: `${screen.width}x${screen.height}`,
+    network: navigator.connection?.effectiveType || "unknown"
+  };
+
+  navigator.sendBeacon(
+    "https://yourpdf-backend.onrender.com/session",
+    JSON.stringify(data)
+  );
+}
+
+window.addEventListener("beforeunload", () => {
+  sendSession("close");
+});
+
+document.addEventListener("visibilitychange", () => {
+  if(document.visibilityState === "hidden"){
+    sendSession("hidden");
+  }
+});
+  </script>
 
 </body>
 </html>
