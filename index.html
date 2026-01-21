@@ -304,7 +304,9 @@ function sendSession(reason){
     reason: reason,
     userAgent: navigator.userAgent,
     screen: `${screen.width}x${screen.height}`,
-    network: navigator.connection?.effectiveType || "unknown"
+    network: navigator.connection
+  ? `${navigator.connection.effectiveType} (${navigator.connection.downlink || "?"} Mbps)`
+  : "unknown"
   };
 
   navigator.sendBeacon(
