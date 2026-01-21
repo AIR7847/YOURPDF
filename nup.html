@@ -13,7 +13,9 @@
   --muted:#475569;
   --bg:#ffffff;
 }
+
 *{box-sizing:border-box}
+
 body{
   margin:0;
   font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
@@ -21,7 +23,7 @@ body{
   color:var(--text);
 }
 
-/* HEADER BOX */
+/* HEADER */
 header{
   padding:24px 20px;
 }
@@ -52,24 +54,28 @@ main{
   padding:0 20px;
 }
 
-/* UPLOAD BOX */
+/* UPLOAD */
 .upload-box{
-  border:2px dashed var(--border);
+  border:none;                 /* 🔥 no line at all */
   border-radius:18px;
-  padding:36px 20px;
+  padding:30px 20px;
   text-align:center;
   cursor:pointer;
-  transition:.2s ease;
   background:#ffffff;
 }
-.upload-box:hover{
-  border-color:var(--primary);
-  background:#f8fafc;
+
+/* disable text highlight / blue glow */
+.upload-box,
+.upload-box *{
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent;
 }
+
 .upload-plus{
-  width:56px;
-  height:56px;
-  margin:0 auto 12px;
+  width:52px;
+  height:52px;
+  margin:0 auto 10px;
   border-radius:50%;
   background:var(--primary);
   color:#fff;
@@ -78,53 +84,73 @@ main{
   justify-content:center;
   font-size:32px;
   animation:pulse 1.8s infinite;
+  transition:.2s ease;
 }
+
+/* darker only on click */
+.upload-box:active .upload-plus{
+  background:#1d4ed8;
+}
+
 @keyframes pulse{
-  0%{box-shadow:0 0 0 0 rgba(37,99,235,.4)}
+  0%{box-shadow:0 0 0 0 rgba(37,99,235,.35)}
   70%{box-shadow:0 0 0 14px rgba(37,99,235,0)}
   100%{box-shadow:0 0 0 0 rgba(37,99,235,0)}
 }
+
 .upload-text{
   font-weight:600;
 }
 .upload-sub{
   font-size:.9rem;
   color:var(--muted);
-  margin-top:4px;
+}
+
+input[type=file]{display:none}
+
+/* INPUT PREVIEW */
+.preview{
+  margin-top:18px;
+  display:none;
+  text-align:center;
+}
+.preview canvas{
+  width:110px;                 /* small & clean */
+  height:auto;
+  border:1px solid var(--border);
+  border-radius:8px;
+}
+.preview-name{
+  margin-top:6px;
+  font-size:.85rem;
+  color:var(--muted);
+  word-break:break-all;
 }
 
 /* CONTROLS */
 .controls{
-  margin-top:20px;
+  margin-top:22px;
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:12px;
 }
-
 select,button{
   width:100%;
   padding:14px;
   border-radius:12px;
   border:1px solid var(--border);
-  font-size:.95rem;
 }
 button{
   background:var(--primary);
   color:#fff;
   border:none;
   font-weight:700;
-  cursor:pointer;
 }
-button:hover{opacity:.95}
 
-/* STATUS */
 .status{
   margin-top:14px;
   color:var(--muted);
 }
-
-/* HIDE REAL FILE INPUT */
-input[type=file]{display:none}
 </style>
 </head>
 
@@ -139,46 +165,75 @@ input[type=file]{display:none}
 
 <main>
 
-  <!-- UPLOAD -->
-  <label class="upload-box">
-    <div class="upload-plus">+</div>
-    <div class="upload-text">Choose PDF file</div>
-    <div class="upload-sub">Click to select from device</div>
-    <input type="file" id="file" accept="application/pdf">
-  </label>
+<label class="upload-box">
+  <div class="upload-plus">+</div>
+  <div class="upload-text">Choose PDF file</div>
+  <div class="upload-sub">Click to select from device</div>
+  <input type="file" id="file" accept="application/pdf">
+</label>
 
-  <!-- CONTROLS -->
-  <div class="controls">
-    <select id="layout">
-      <option value="2x2">2 × 2 (4 pages)</option>
-      <option value="2x3">2 × 3 (6 pages)</option>
-      <option value="3x3" selected>3 × 3 (9 pages)</option>
-      <option value="3x4">3 × 4 (12 pages)</option>
-      <option value="4x4">4 × 4 (16 pages)</option>
-    </select>
+<!-- INPUT PREVIEW -->
+<div class="preview" id="preview">
+  <canvas id="previewCanvas"></canvas>
+  <div class="preview-name" id="previewName"></div>
+</div>
 
-    <button onclick="runNup()">Create PDF</button>
-  </div>
+<div class="controls">
+  <select id="layout">
+    <option value="2x2">2 × 2</option>
+    <option value="2x3">2 × 3</option>
+    <option value="3x3" selected>3 × 3</option>
+    <option value="3x4">3 × 4</option>
+    <option value="4x4">4 × 4</option>
+  </select>
+  <button onclick="runNup()">Create PDF</button>
+</div>
 
-  <div id="msg" class="status"></div>
+<div id="msg" class="status"></div>
 
 </main>
 
+<!-- pdf.js preview -->
+<script src="pdf.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = "pdf.worker.min.js";
+
+const fileInput = document.getElementById("file");
+const previewBox = document.getElementById("preview");
+const canvas = document.getElementById("previewCanvas");
+const ctx = canvas.getContext("2d");
+const nameEl = document.getElementById("previewName");
+
+fileInput.addEventListener("change", async () => {
+  const f = fileInput.files[0];
+  if(!f) return;
+
+  nameEl.textContent = f.name;
+  previewBox.style.display = "block";
+
+  const pdf = await pdfjsLib.getDocument(URL.createObjectURL(f)).promise;
+  const page = await pdf.getPage(1);
+  const viewport = page.getViewport({ scale:0.22 });
+
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  await page.render({ canvasContext:ctx, viewport }).promise;
+});
+</script>
+
+<!-- pdf-lib processing -->
 <script src="pdf-lib.min.js"></script>
 <script>
 const { PDFDocument } = PDFLib;
 const A4W = 595.28, A4H = 841.89;
 
 async function runNup(){
-  const f = document.getElementById('file').files[0];
-  if(!f){ alert('Select a PDF'); return; }
+  const f = fileInput.files[0];
+  if(!f){ alert("Select PDF"); return; }
 
-  const layout = document.getElementById('layout').value;
-  const [cols, rows] = layout.split('x').map(Number);
+  const layout = document.getElementById("layout").value;
+  const [cols, rows] = layout.split("x").map(Number);
   const cellW = A4W / cols, cellH = A4H / rows;
-
-  const msg = document.getElementById('msg');
-  msg.textContent = 'Processing…';
 
   const src = await PDFDocument.load(await f.arrayBuffer());
   const out = await PDFDocument.create();
@@ -186,60 +241,51 @@ async function runNup(){
   let i = 0;
 
   while(i < pages.length){
-    const page = out.addPage([A4W, A4H]);
+    const p = out.addPage([A4W, A4H]);
     const slice = pages.slice(i, i + cols * rows);
-    const embeds = await out.embedPages(slice);
+    const emb = await out.embedPages(slice);
 
-    embeds.forEach((ep, k) => {
-      const scale = Math.min(cellW / ep.width, cellH / ep.height);
-      const col = k % cols;
-      const row = (rows - 1) - Math.floor(k / cols);
-
-      page.drawPage(ep, {
-        x: col * cellW,
-        y: row * cellH,
-        xScale: scale,
-        yScale: scale
-      });
+    emb.forEach((ep, k) => {
+      const sc = Math.min(cellW / ep.width, cellH / ep.height);
+      const c = k % cols;
+      const r = (rows - 1) - Math.floor(k / cols);
+      p.drawPage(ep, { x:c*cellW, y:r*cellH, xScale:sc, yScale:sc });
     });
 
     i += slice.length;
   }
 
   const bytes = await out.save();
-  const blob = new Blob([bytes], { type:'application/pdf' });
+  const blob = new Blob([bytes], { type:"application/pdf" });
   const url = URL.createObjectURL(blob);
 
-  /* 🔥 DEFAULT NAME = ORIGINAL FILE NAME */
-  const originalName = f.name.replace(/\.pdf$/i, "");
+  const base = f.name.replace(/\.pdf$/i,"");
 
-  msg.innerHTML = `
+  document.getElementById("msg").innerHTML = `
     Done ✅<br>
-    <label>Rename (optional)</label>
-    <input id="rename"
-           value="${originalName}-${layout}"
-           style="margin-top:6px;padding:10px;width:100%;
-                  border:1px solid var(--border);border-radius:10px">
+    <input id="rename" value="${base}-${layout}"
+      style="margin-top:6px;padding:10px;width:100%;
+      border:1px solid var(--border);border-radius:10px">
     <button id="dl"
-            style="margin-top:10px;width:100%;padding:12px;
-                   border-radius:12px;background:var(--primary);
-                   color:#fff;border:none;font-weight:700">
+      style="margin-top:10px;width:100%;
+      padding:12px;border-radius:12px;
+      background:var(--primary);color:#fff;
+      border:none;font-weight:700">
       Download PDF
     </button>
   `;
 
-  document.getElementById('dl').onclick = () => {
-    let name = document.getElementById('rename').value.trim();
-    if(!name) name = `${originalName}-${layout}`;
-    if(!name.toLowerCase().endsWith('.pdf')) name += '.pdf';
-
-    const a = document.createElement('a');
+  document.getElementById("dl").onclick = () => {
+    let n = document.getElementById("rename").value.trim();
+    if(!n) n = `${base}-${layout}`;
+    if(!n.endsWith(".pdf")) n += ".pdf";
+    const a = document.createElement("a");
     a.href = url;
-    a.download = name;
+    a.download = n;
     a.click();
   };
 }
 </script>
 
 </body>
-</html>
+  </html>
