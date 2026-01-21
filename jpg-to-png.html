@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>JPG → PNG – PDF Toolkit</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --bg:#0b1220; --card:#0f172a; --muted:#94a3b8;
+  --text:#e5e7eb; --accent:#22c55e; --border:#1f2937;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background:linear-gradient(180deg,#0b1220,#020617);
+  color:var(--text);
+}
+header{padding:16px 20px;border-bottom:1px solid var(--border)}
+header .wrap{max-width:900px;margin:auto;display:flex;gap:12px;align-items:center}
+nav{margin-left:auto}
+nav a{color:var(--muted);text-decoration:none}
+nav a:hover{color:var(--text)}
+main{max-width:900px;margin:28px auto;padding:0 20px}
+.card{
+  background:linear-gradient(180deg,#0f172a,#020617);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:20px;
+}
+h1{margin:0 0 8px;font-size:1.3rem}
+p{margin:0;color:var(--muted)}
+input,button{
+  width:100%;
+  padding:12px 14px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:#020617;
+  color:var(--text);
+  margin-top:10px;
+}
+button.primary{
+  background:linear-gradient(135deg,var(--accent),#16a34a);
+  border:none;
+  color:#052e16;
+  font-weight:800;
+  cursor:pointer;
+}
+.status{margin-top:12px;color:var(--muted)}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="wrap">
+    <strong>PDF Toolkit</strong>
+    <nav>
+      <a href="index.html">Home</a> |
+      <a href="png-to-jpg.html">PNG → JPG</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="card">
+    <h1>JPG → PNG</h1>
+    <p>Convert JPG images to PNG format (batch supported).</p>
+
+    <input type="file" id="files" accept="image/jpeg" multiple>
+
+    <button class="primary" onclick="convert()">Convert to PNG</button>
+
+    <div id="msg" class="status"></div>
+  </div>
+</main>
+
+<script>
+function convert(){
+  const files = [...document.getElementById("files").files];
+  if(files.length === 0){
+    alert("Select JPG images");
+    return;
+  }
+
+  const msg = document.getElementById("msg");
+  msg.textContent = "Converting…";
+
+  let done = 0;
+
+  files.forEach(file => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+
+      ctx.drawImage(img, 0, 0);
+
+      canvas.toBlob(blob => {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = file.name.replace(/\.jpe?g$/i, ".png");
+        a.click();
+
+        done++;
+        if(done === files.length){
+          msg.textContent = "Done ✅ (All images downloaded)";
+        }
+      }, "image/png");
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+</script>
+
+</body>
+</html>

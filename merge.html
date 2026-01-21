@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Merge PDFs – PDF Toolkit</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --bg:#0b1220; --card:#0f172a; --muted:#94a3b8; --text:#e5e7eb;
+  --accent:#22c55e; --border:#1f2937;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background:linear-gradient(180deg,#0b1220,#020617);
+  color:var(--text);
+}
+header{
+  padding:16px 20px;
+  border-bottom:1px solid var(--border);
+}
+header .wrap{
+  max-width:900px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+nav{margin-left:auto}
+nav a{color:var(--muted);text-decoration:none}
+nav a:hover{color:var(--text)}
+main{
+  max-width:900px;
+  margin:28px auto;
+  padding:0 20px;
+}
+.card{
+  background:linear-gradient(180deg,#0f172a,#020617);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:20px;
+}
+h1{margin:0 0 8px;font-size:1.3rem}
+p{margin:0;color:var(--muted)}
+input,button{
+  width:100%;
+  padding:12px 14px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:#020617;
+  color:var(--text);
+  margin-top:10px;
+}
+button.primary{
+  background:linear-gradient(135deg,var(--accent),#16a34a);
+  border:none;
+  color:#052e16;
+  font-weight:800;
+  cursor:pointer;
+}
+.status{margin-top:12px;color:var(--muted)}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="wrap">
+    <strong>PDF Toolkit</strong>
+    <nav>
+      <a href="index.html">N-Up</a> |
+      <a href="rotate.html">Rotate</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="card">
+    <h1>Merge PDFs</h1>
+    <p>Select multiple PDFs. They will be merged in the same order.</p>
+
+    <input type="file" id="files" accept="application/pdf" multiple>
+
+    <button class="primary" onclick="mergePdfs()">Merge PDFs</button>
+
+    <div id="msg" class="status"></div>
+  </div>
+</main>
+
+<script src="pdf-lib.min.js"></script>
+<script>
+const { PDFDocument } = PDFLib;
+
+async function mergePdfs(){
+  const files = [...document.getElementById("files").files];
+  if(files.length < 2){
+    alert("Select at least 2 PDFs");
+    return;
+  }
+
+  const msg = document.getElementById("msg");
+  msg.textContent = "Merging…";
+
+  const out = await PDFDocument.create();
+
+  for(const file of files){
+    const buf = await file.arrayBuffer();
+    const pdf = await PDFDocument.load(buf, { ignoreEncryption: true });
+    const pages = await out.copyPages(pdf, pdf.getPageIndices());
+    pages.forEach(p => out.addPage(p));
+  }
+
+  const bytes = await out.save();
+  const blob = new Blob([bytes], { type: "application/pdf" });
+  const url = URL.createObjectURL(blob);
+
+  msg.innerHTML = `
+    Done ✅<br>
+    <label>Rename (optional)</label>
+    <input id="rename" placeholder="merged.pdf" style="margin-top:6px">
+    <button class="primary" id="dl" style="margin-top:8px">Download PDF</button>
+  `;
+
+  document.getElementById("dl").onclick = () => {
+    let name = document.getElementById("rename").value.trim();
+    if(!name) name = "merged.pdf";
+    if(!name.toLowerCase().endsWith(".pdf")) name += ".pdf";
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    a.click();
+  };
+}
+</script>
+
+</body>
+</html>

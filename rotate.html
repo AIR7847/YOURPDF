@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rotate PDF – PDF Toolkit</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --bg:#0b1220;
+  --card:#0f172a;
+  --muted:#94a3b8;
+  --text:#e5e7eb;
+  --accent:#22c55e;
+  --border:#1f2937;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background:linear-gradient(180deg,#0b1220,#020617);
+  color:var(--text);
+}
+header{
+  padding:16px 20px;
+  border-bottom:1px solid var(--border);
+}
+header .wrap{
+  max-width:900px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+nav{margin-left:auto}
+nav a{
+  color:var(--muted);
+  text-decoration:none;
+}
+nav a:hover{color:var(--text)}
+main{
+  max-width:900px;
+  margin:28px auto;
+  padding:0 20px;
+}
+.card{
+  background:linear-gradient(180deg,#0f172a,#020617);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:20px;
+}
+h1{
+  margin:0 0 8px;
+  font-size:1.3rem;
+}
+p{
+  margin:0;
+  color:var(--muted);
+}
+input,select,button{
+  width:100%;
+  padding:12px 14px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:#020617;
+  color:var(--text);
+  margin-top:10px;
+}
+button.primary{
+  background:linear-gradient(135deg,var(--accent),#16a34a);
+  border:none;
+  color:#052e16;
+  font-weight:800;
+  cursor:pointer;
+}
+.status{
+  margin-top:12px;
+  color:var(--muted);
+}
+.row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="wrap">
+    <strong>PDF Toolkit</strong>
+    <nav>
+      <a href="index.html">← Back to N-Up</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="card">
+    <h1>Rotate PDF Pages</h1>
+    <p>Rotate all pages or selected page range. Offline & safe.</p>
+
+    <input type="file" id="file" accept="application/pdf">
+
+    <div class="row">
+      <select id="angle">
+        <option value="90">Rotate 90°</option>
+        <option value="180">Rotate 180°</option>
+        <option value="270">Rotate 270°</option>
+      </select>
+
+      <input id="range" placeholder="Page range (e.g. 1-3) or blank for all">
+    </div>
+
+    <button class="primary" onclick="rotatePdf()">Rotate PDF</button>
+
+    <div id="msg" class="status"></div>
+  </div>
+</main>
+
+<script src="pdf-lib.min.js"></script>
+<script>
+const { PDFDocument, degrees } = PDFLib;
+
+async function rotatePdf(){
+  const file = document.getElementById("file").files[0];
+  if(!file){
+    alert("Select a PDF");
+    return;
+  }
+
+  const angle = parseInt(document.getElementById("angle").value);
+  const rangeText = document.getElementById("range").value.trim();
+  const msg = document.getElementById("msg");
+
+  msg.textContent = "Processing…";
+
+  const buffer = await file.arrayBuffer();
+  const pdf = await PDFDocument.load(buffer, { ignoreEncryption: true });
+  const pages = pdf.getPages();
+
+  let indexes = pages.map((_, i) => i);
+
+  if(rangeText.includes("-")){
+    const parts = rangeText.split("-");
+    const start = parseInt(parts[0]) - 1;
+    const end = parseInt(parts[1]) - 1;
+    indexes = indexes.filter(i => i >= start && i <= end);
+  }
+
+  indexes.forEach(i => {
+    pages[i].setRotation(degrees(angle));
+  });
+
+  const bytes = await pdf.save();
+  const blob = new Blob([bytes], { type: "application/pdf" });
+  const url = URL.createObjectURL(blob);
+
+  msg.innerHTML = `
+    Done ✅<br>
+    <label>Rename (optional)</label>
+    <input id="rename" placeholder="rotated.pdf" style="margin-top:6px">
+    <button class="primary" id="download" style="margin-top:8px">Download PDF</button>
+  `;
+
+  document.getElementById("download").onclick = () => {
+    let name = document.getElementById("rename").value.trim();
+    if(!name) name = "rotated.pdf";
+    if(!name.toLowerCase().endsWith(".pdf")) name += ".pdf";
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    a.click();
+  };
+}
+</script>
+
+</body>
+</html>
