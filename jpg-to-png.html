@@ -1,0 +1,119 @@
+<!-- jpg-to-png.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>JPG to PNG – YOURPDF</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{--primary:#2563eb;--border:#e5e7eb;--text:#0f172a;--muted:#475569;--bg:#ffffff}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui;background:var(--bg);color:var(--text)}
+header{padding:24px 20px}
+.header-box{max-width:900px;margin:auto;padding:18px 20px;border:1px solid var(--border);
+  border-radius:16px;text-align:center;background:#f8fafc}
+.header-box h1{margin:0;font-size:1.6rem;font-weight:800}
+.header-box p{margin:6px 0 0;color:var(--muted);font-size:.95rem}
+main{max-width:900px;margin:28px auto;padding:0 20px}
+
+/* upload */
+.upload-box{border:none;border-radius:18px;padding:30px 20px;text-align:center;cursor:pointer}
+.upload-box,*{-webkit-tap-highlight-color:transparent;user-select:none}
+.upload-plus{width:52px;height:52px;margin:0 auto 10px;border-radius:50%;
+  background:var(--primary);color:#fff;display:flex;align-items:center;
+  justify-content:center;font-size:32px;animation:pulse 1.8s infinite}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(37,99,235,.35)}
+  70%{box-shadow:0 0 0 14px rgba(37,99,235,0)}
+  100%{box-shadow:0 0 0 0 rgba(37,99,235,0)}
+}
+.upload-text{font-weight:600}
+.upload-sub{font-size:.9rem;color:var(--muted)}
+input[type=file]{display:none}
+
+/* preview */
+.preview-grid{margin-top:18px;display:none;display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+  gap:14px;justify-items:center}
+.preview-item{text-align:center}
+.preview-item img{width:100px;border:1px solid var(--border);border-radius:8px}
+.preview-name{margin-top:6px;font-size:.85rem;color:var(--muted)}
+
+/* controls */
+.controls{margin-top:22px}
+button{width:100%;padding:14px;border-radius:12px;border:none;
+  background:var(--primary);color:#fff;font-weight:700}
+.status{margin-top:14px;color:var(--muted)}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="header-box">
+    <h1>JPG to PNG</h1>
+    <p>Convert JPG images to PNG format</p>
+  </div>
+</header>
+
+<main>
+
+<label class="upload-box">
+  <div class="upload-plus">+</div>
+  <div class="upload-text">Choose JPG images</div>
+  <div class="upload-sub">Multiple images supported</div>
+  <input type="file" id="files" accept="image/jpeg" multiple>
+</label>
+
+<div class="preview-grid" id="preview"></div>
+
+<div class="controls">
+  <button onclick="convert()">Convert to PNG</button>
+</div>
+
+<div id="msg" class="status"></div>
+
+</main>
+
+<script>
+const filesInput=document.getElementById("files");
+const grid=document.getElementById("preview");
+
+filesInput.addEventListener("change",()=>{
+  grid.innerHTML="";grid.style.display="grid";
+  [...filesInput.files].forEach(f=>{
+    const item=document.createElement("div");
+    item.className="preview-item";
+    const img=document.createElement("img");
+    img.src=URL.createObjectURL(f);
+    const name=document.createElement("div");
+    name.className="preview-name";name.textContent=f.name;
+    item.appendChild(img);item.appendChild(name);grid.appendChild(item);
+  });
+});
+
+function convert(){
+  const files=[...filesInput.files];
+  if(files.length===0){alert("Select images");return;}
+  files.forEach((f,i)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement("canvas");
+      c.width=img.width;c.height=img.height;
+      c.getContext("2d").drawImage(img,0,0);
+      c.toBlob(b=>{
+        const a=document.createElement("a");
+        a.href=URL.createObjectURL(b);
+        a.download=f.name.replace(/\.jpe?g$/i,"")+".png";
+        a.click();
+      },"image/png");
+    };
+    img.src=URL.createObjectURL(f);
+  });
+  document.getElementById("msg").textContent="Done ✅";
+}
+</script>
+
+</body>
+</html>

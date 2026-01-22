@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rotate PDF – YOURPDF</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --primary:#2563eb; --border:#e5e7eb; --text:#0f172a;
+  --muted:#475569; --bg:#ffffff;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui;background:var(--bg);color:var(--text)}
+header{padding:24px 20px}
+.header-box{max-width:900px;margin:auto;padding:18px 20px;border:1px solid var(--border);
+  border-radius:16px;text-align:center;background:#f8fafc}
+.header-box h1{margin:0;font-size:1.6rem;font-weight:800}
+.header-box p{margin:6px 0 0;color:var(--muted);font-size:.95rem}
+main{max-width:900px;margin:28px auto;padding:0 20px}
+
+/* upload */
+.upload-box{border:none;border-radius:18px;padding:30px 20px;text-align:center;cursor:pointer}
+.upload-box,*{user-select:none;-webkit-tap-highlight-color:transparent}
+.upload-plus{width:52px;height:52px;margin:0 auto 10px;border-radius:50%;
+  background:var(--primary);color:#fff;display:flex;align-items:center;
+  justify-content:center;font-size:32px;animation:pulse 1.8s infinite}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(37,99,235,.35)}
+  70%{box-shadow:0 0 0 14px rgba(37,99,235,0)}
+  100%{box-shadow:0 0 0 0 rgba(37,99,235,0)}
+}
+.upload-text{font-weight:600}
+.upload-sub{font-size:.9rem;color:var(--muted)}
+input[type=file]{display:none}
+
+/* preview */
+.preview{margin-top:18px;display:none;text-align:center}
+.preview canvas{width:110px;border:1px solid var(--border);border-radius:8px}
+.preview-name{margin-top:6px;font-size:.85rem;color:var(--muted)}
+
+/* controls */
+.controls{margin-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.controls.full{grid-template-columns:1fr}
+select,button,input{width:100%;padding:14px;border-radius:12px;border:1px solid var(--border)}
+button{background:var(--primary);color:#fff;border:none;font-weight:700}
+.status{margin-top:14px;color:var(--muted)}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="header-box">
+    <h1>Rotate PDF</h1>
+    <p>Rotate all pages or selected page range</p>
+  </div>
+</header>
+
+<main>
+
+<label class="upload-box">
+  <div class="upload-plus">+</div>
+  <div class="upload-text">Choose PDF file</div>
+  <div class="upload-sub">Click to select from device</div>
+  <input type="file" id="file" accept="application/pdf">
+</label>
+
+<!-- preview -->
+<div class="preview" id="preview">
+  <canvas id="previewCanvas"></canvas>
+  <div class="preview-name" id="previewName"></div>
+</div>
+
+<div class="controls">
+  <select id="angle">
+    <option value="90">Rotate 90°</option>
+    <option value="180">Rotate 180°</option>
+    <option value="270">Rotate 270°</option>
+  </select>
+  <input id="range" placeholder="Page range (e.g. 1-3 or blank)">
+</div>
+
+<div class="controls full">
+  <button onclick="rotatePdf()">Rotate PDF</button>
+</div>
+
+<div id="msg" class="status"></div>
+
+</main>
+
+<!-- preview -->
+<script src="pdf.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = "pdf.worker.min.js";
+const fileInput = document.getElementById("file");
+const previewBox = document.getElementById("preview");
+const canvas = document.getElementById("previewCanvas");
+const ctx = canvas.getContext("2d");
+const nameEl = document.getElementById("previewName");
+
+fileInput.addEventListener("change", async ()=>{
+  const f = fileInput.files[0];
+  if(!f) return;
+  nameEl.textContent = f.name;
+  previewBox.style.display="block";
+  const pdf = await pdfjsLib.getDocument(URL.createObjectURL(f)).promise;
+  const page = await pdf.getPage(1);
+  const vp = page.getViewport({scale:.22});
+  canvas.width=vp.width; canvas.height=vp.height;
+  await page.render({canvasContext:ctx,viewport:vp}).promise;
+});
+</script>
+
+<script src="pdf-lib.min.js"></script>
+<script>
+const { PDFDocument, degrees } = PDFLib;
+async function rotatePdf(){
+  const f=fileInput.files[0]; if(!f){alert("Select PDF");return;}
+  const angle=parseInt(angleSelect.value);
+  const range=document.getElementById("range").value.trim();
+  const msg=document.getElementById("msg"); msg.textContent="Processing…";
+
+  const pdf=await PDFDocument.load(await f.arrayBuffer(),{ignoreEncryption:true});
+  const pages=pdf.getPages();
+  let idx=pages.map((_,i)=>i);
+  if(range.includes("-")){
+    const [a,b]=range.split("-").map(x=>parseInt(x)-1);
+    idx=idx.filter(i=>i>=a&&i<=b);
+  }
+  idx.forEach(i=>pages[i].setRotation(degrees(angle)));
+
+  const bytes=await pdf.save();
+  const blob=new Blob([bytes],{type:"application/pdf"});
+  const url=URL.createObjectURL(blob);
+  const base=f.name.replace(/\.pdf$/i,"");
+
+  msg.innerHTML=`Done ✅<br>
+    <input id="rename" value="${base}-rotated"
+      style="margin-top:6px;padding:10px;width:100%;
+      border:1px solid var(--border);border-radius:10px">
+    <button id="dl" style="margin-top:10px;width:100%;
+      padding:12px;border-radius:12px;background:var(--primary);
+      color:#fff;border:none;font-weight:700">Download PDF</button>`;
+  dl.onclick=()=>{
+    let n=rename.value.trim()||`${base}-rotated`;
+    if(!n.endsWith(".pdf")) n+=".pdf";
+    const a=document.createElement("a");a.href=url;a.download=n;a.click();
+  };
+}
+const angleSelect=document.getElementById("angle");
+</script>
+
+</body>
+</html>
