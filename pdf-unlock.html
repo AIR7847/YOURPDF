@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PDF Unlock – YOURPDF</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --primary:#2563eb;
+  --border:#e5e7eb;
+  --text:#0f172a;
+  --muted:#475569;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background:#fff;
+  color:var(--text);
+}
+
+/* -------- UPLOAD SCREEN -------- */
+#uploadScreen{
+  max-width:900px;
+  margin:40px auto;
+  padding:0 20px;
+}
+.header-box{
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:18px;
+  background:#f8fafc;
+  text-align:center;
+}
+.header-box h1{margin:0;font-size:1.6rem}
+.header-box p{margin:6px 0 0;color:var(--muted)}
+
+.upload-box{
+  margin-top:24px;
+  text-align:center;
+  cursor:pointer;
+}
+.upload-plus{
+  width:52px;height:52px;
+  margin:0 auto 10px;
+  border-radius:50%;
+  background:var(--primary);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:32px;
+}
+.upload-text{font-weight:600}
+.upload-sub{font-size:.9rem;color:var(--muted)}
+input[type=file]{display:none}
+
+.controls{
+  margin-top:20px;
+  display:grid;
+  gap:12px;
+}
+.pass-wrap{position:relative}
+.pass-wrap input{padding-right:44px}
+.eye{
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  cursor:pointer;
+}
+input,button{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:1px solid var(--border);
+}
+button{
+  background:var(--primary);
+  color:#fff;
+  border:none;
+  font-weight:700;
+}
+
+/* -------- VIEWER SCREEN -------- */
+#viewerScreen{
+  display:none;
+  height:100vh;
+}
+.viewer-bar{
+  height:48px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 10px;
+  border-bottom:1px solid var(--border);
+  background:#f8fafc;
+}
+.viewer-bar button{
+  background:none;
+  border:none;
+  font-size:14px;
+  color:var(--primary);
+  font-weight:600;
+}
+#pdfContainer{
+  height:calc(100vh - 48px);
+  overflow:auto;
+  background:#e5e7eb;
+  padding:10px;
+}
+canvas{
+  display:block;
+  margin:0 auto 12px;
+  background:#fff;
+}
+</style>
+</head>
+
+<body>
+
+<!-- UPLOAD -->
+<div id="uploadScreen">
+  <div class="header-box">
+    <h1>PDF Unlock</h1>
+    <p>PAN / Aadhaar / Admit Card (Official Method)</p>
+  </div>
+
+  <label class="upload-box">
+    <div class="upload-plus">+</div>
+    <div class="upload-text">Choose password protected PDF</div>
+    <div class="upload-sub">You must know the password</div>
+    <input type="file" id="file" accept="application/pdf">
+  </label>
+
+  <div class="controls">
+    <div class="pass-wrap">
+      <input id="password" type="password" placeholder="Enter PDF password">
+      <span class="eye" onclick="togglePwd()">👁</span>
+    </div>
+    <button onclick="openViewer()">View PDF</button>
+  </div>
+</div>
+
+<!-- VIEWER -->
+<div id="viewerScreen">
+  <div class="viewer-bar">
+    <button onclick="goBack()">⬅ Back</button>
+    <button onclick="printPdf()">🖨 Print PDF</button>
+  </div>
+  <div id="pdfContainer"></div>
+</div>
+
+<script src="pdf.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc="pdf.worker.min.js";
+
+const fileInput = document.getElementById("file");
+const pwdInput  = document.getElementById("password");
+const uploadScreen = document.getElementById("uploadScreen");
+const viewerScreen = document.getElementById("viewerScreen");
+const pdfContainer = document.getElementById("pdfContainer");
+
+let pdfUrl = null;
+
+function togglePwd(){
+  pwdInput.type = pwdInput.type==="password" ? "text" : "password";
+}
+
+async function openViewer(){
+  const f = fileInput.files[0];
+  const pwd = pwdInput.value;
+  if(!f){alert("Select PDF");return;}
+  if(!pwd){alert("Enter password");return;}
+
+  pdfUrl = URL.createObjectURL(f);
+
+  try{
+    const pdf = await pdfjsLib.getDocument({
+      url: pdfUrl,
+      password: pwd
+    }).promise;
+
+    uploadScreen.style.display="none";
+    viewerScreen.style.display="block";
+    pdfContainer.innerHTML="";
+
+    for(let i=1;i<=pdf.numPages;i++){
+      const page = await pdf.getPage(i);
+      const vp = page.getViewport({ scale:1.2 });
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = vp.width;
+      canvas.height = vp.height;
+      pdfContainer.appendChild(canvas);
+      await page.render({ canvasContext:ctx, viewport:vp }).promise;
+    }
+
+  }catch{
+    alert("Wrong password or PDF allows unlock only via Print.");
+  }
+}
+
+function printPdf(){
+  if(!pdfUrl) return;
+
+  // 🔥 Hidden iframe print (perfect pages)
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "0";
+  iframe.src = pdfUrl;
+
+  document.body.appendChild(iframe);
+
+  iframe.onload = () => {
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+  };
+}
+
+function goBack(){
+  viewerScreen.style.display="none";
+  uploadScreen.style.display="block";
+}
+</script>
+
+</body>
+</html>

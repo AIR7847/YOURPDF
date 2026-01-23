@@ -2,178 +2,153 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Rotate PDF – PDF Toolkit</title>
+<title>Rotate PDF – YOURPDF</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 :root{
-  --bg:#0b1220;
-  --card:#0f172a;
-  --muted:#94a3b8;
-  --text:#e5e7eb;
-  --accent:#22c55e;
-  --border:#1f2937;
+  --primary:#2563eb; --border:#e5e7eb; --text:#0f172a;
+  --muted:#475569; --bg:#ffffff;
 }
 *{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-  background:linear-gradient(180deg,#0b1220,#020617);
-  color:var(--text);
+body{margin:0;font-family:system-ui;background:var(--bg);color:var(--text)}
+header{padding:24px 20px}
+.header-box{max-width:900px;margin:auto;padding:18px 20px;border:1px solid var(--border);
+  border-radius:16px;text-align:center;background:#f8fafc}
+.header-box h1{margin:0;font-size:1.6rem;font-weight:800}
+.header-box p{margin:6px 0 0;color:var(--muted);font-size:.95rem}
+main{max-width:900px;margin:28px auto;padding:0 20px}
+
+/* upload */
+.upload-box{border:none;border-radius:18px;padding:30px 20px;text-align:center;cursor:pointer}
+.upload-box,*{user-select:none;-webkit-tap-highlight-color:transparent}
+.upload-plus{width:52px;height:52px;margin:0 auto 10px;border-radius:50%;
+  background:var(--primary);color:#fff;display:flex;align-items:center;
+  justify-content:center;font-size:32px;animation:pulse 1.8s infinite}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(37,99,235,.35)}
+  70%{box-shadow:0 0 0 14px rgba(37,99,235,0)}
+  100%{box-shadow:0 0 0 0 rgba(37,99,235,0)}
 }
-header{
-  padding:16px 20px;
-  border-bottom:1px solid var(--border);
-}
-header .wrap{
-  max-width:900px;
-  margin:auto;
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-nav{margin-left:auto}
-nav a{
-  color:var(--muted);
-  text-decoration:none;
-}
-nav a:hover{color:var(--text)}
-main{
-  max-width:900px;
-  margin:28px auto;
-  padding:0 20px;
-}
-.card{
-  background:linear-gradient(180deg,#0f172a,#020617);
-  border:1px solid var(--border);
-  border-radius:16px;
-  padding:20px;
-}
-h1{
-  margin:0 0 8px;
-  font-size:1.3rem;
-}
-p{
-  margin:0;
-  color:var(--muted);
-}
-input,select,button{
-  width:100%;
-  padding:12px 14px;
-  border-radius:12px;
-  border:1px solid var(--border);
-  background:#020617;
-  color:var(--text);
-  margin-top:10px;
-}
-button.primary{
-  background:linear-gradient(135deg,var(--accent),#16a34a);
-  border:none;
-  color:#052e16;
-  font-weight:800;
-  cursor:pointer;
-}
-.status{
-  margin-top:12px;
-  color:var(--muted);
-}
-.row{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
+.upload-text{font-weight:600}
+.upload-sub{font-size:.9rem;color:var(--muted)}
+input[type=file]{display:none}
+
+/* preview */
+.preview{margin-top:18px;display:none;text-align:center}
+.preview canvas{width:110px;border:1px solid var(--border);border-radius:8px}
+.preview-name{margin-top:6px;font-size:.85rem;color:var(--muted)}
+
+/* controls */
+.controls{margin-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.controls.full{grid-template-columns:1fr}
+select,button,input{width:100%;padding:14px;border-radius:12px;border:1px solid var(--border)}
+button{background:var(--primary);color:#fff;border:none;font-weight:700}
+.status{margin-top:14px;color:var(--muted)}
 </style>
 </head>
 
 <body>
 
 <header>
-  <div class="wrap">
-    <strong>PDF Toolkit</strong>
-    <nav>
-      <a href="index.html">← Back to N-Up</a>
-    </nav>
+  <div class="header-box">
+    <h1>Rotate PDF</h1>
+    <p>Rotate all pages or selected page range</p>
   </div>
 </header>
 
 <main>
-  <div class="card">
-    <h1>Rotate PDF Pages</h1>
-    <p>Rotate all pages or selected page range. Offline & safe.</p>
 
-    <input type="file" id="file" accept="application/pdf">
+<label class="upload-box">
+  <div class="upload-plus">+</div>
+  <div class="upload-text">Choose PDF file</div>
+  <div class="upload-sub">Click to select from device</div>
+  <input type="file" id="file" accept="application/pdf">
+</label>
 
-    <div class="row">
-      <select id="angle">
-        <option value="90">Rotate 90°</option>
-        <option value="180">Rotate 180°</option>
-        <option value="270">Rotate 270°</option>
-      </select>
+<!-- preview -->
+<div class="preview" id="preview">
+  <canvas id="previewCanvas"></canvas>
+  <div class="preview-name" id="previewName"></div>
+</div>
 
-      <input id="range" placeholder="Page range (e.g. 1-3) or blank for all">
-    </div>
+<div class="controls">
+  <select id="angle">
+    <option value="90">Rotate 90°</option>
+    <option value="180">Rotate 180°</option>
+    <option value="270">Rotate 270°</option>
+  </select>
+  <input id="range" placeholder="Page range (e.g. 1-3 or blank)">
+</div>
 
-    <button class="primary" onclick="rotatePdf()">Rotate PDF</button>
+<div class="controls full">
+  <button onclick="rotatePdf()">Rotate PDF</button>
+</div>
 
-    <div id="msg" class="status"></div>
-  </div>
+<div id="msg" class="status"></div>
+
 </main>
+
+<!-- preview -->
+<script src="pdf.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = "pdf.worker.min.js";
+const fileInput = document.getElementById("file");
+const previewBox = document.getElementById("preview");
+const canvas = document.getElementById("previewCanvas");
+const ctx = canvas.getContext("2d");
+const nameEl = document.getElementById("previewName");
+
+fileInput.addEventListener("change", async ()=>{
+  const f = fileInput.files[0];
+  if(!f) return;
+  nameEl.textContent = f.name;
+  previewBox.style.display="block";
+  const pdf = await pdfjsLib.getDocument(URL.createObjectURL(f)).promise;
+  const page = await pdf.getPage(1);
+  const vp = page.getViewport({scale:.22});
+  canvas.width=vp.width; canvas.height=vp.height;
+  await page.render({canvasContext:ctx,viewport:vp}).promise;
+});
+</script>
 
 <script src="pdf-lib.min.js"></script>
 <script>
 const { PDFDocument, degrees } = PDFLib;
-
 async function rotatePdf(){
-  const file = document.getElementById("file").files[0];
-  if(!file){
-    alert("Select a PDF");
-    return;
+  const f=fileInput.files[0]; if(!f){alert("Select PDF");return;}
+  const angle=parseInt(angleSelect.value);
+  const range=document.getElementById("range").value.trim();
+  const msg=document.getElementById("msg"); msg.textContent="Processing…";
+
+  const pdf=await PDFDocument.load(await f.arrayBuffer(),{ignoreEncryption:true});
+  const pages=pdf.getPages();
+  let idx=pages.map((_,i)=>i);
+  if(range.includes("-")){
+    const [a,b]=range.split("-").map(x=>parseInt(x)-1);
+    idx=idx.filter(i=>i>=a&&i<=b);
   }
+  idx.forEach(i=>pages[i].setRotation(degrees(angle)));
 
-  const angle = parseInt(document.getElementById("angle").value);
-  const rangeText = document.getElementById("range").value.trim();
-  const msg = document.getElementById("msg");
+  const bytes=await pdf.save();
+  const blob=new Blob([bytes],{type:"application/pdf"});
+  const url=URL.createObjectURL(blob);
+  const base=f.name.replace(/\.pdf$/i,"");
 
-  msg.textContent = "Processing…";
-
-  const buffer = await file.arrayBuffer();
-  const pdf = await PDFDocument.load(buffer, { ignoreEncryption: true });
-  const pages = pdf.getPages();
-
-  let indexes = pages.map((_, i) => i);
-
-  if(rangeText.includes("-")){
-    const parts = rangeText.split("-");
-    const start = parseInt(parts[0]) - 1;
-    const end = parseInt(parts[1]) - 1;
-    indexes = indexes.filter(i => i >= start && i <= end);
-  }
-
-  indexes.forEach(i => {
-    pages[i].setRotation(degrees(angle));
-  });
-
-  const bytes = await pdf.save();
-  const blob = new Blob([bytes], { type: "application/pdf" });
-  const url = URL.createObjectURL(blob);
-
-  msg.innerHTML = `
-    Done ✅<br>
-    <label>Rename (optional)</label>
-    <input id="rename" placeholder="rotated.pdf" style="margin-top:6px">
-    <button class="primary" id="download" style="margin-top:8px">Download PDF</button>
-  `;
-
-  document.getElementById("download").onclick = () => {
-    let name = document.getElementById("rename").value.trim();
-    if(!name) name = "rotated.pdf";
-    if(!name.toLowerCase().endsWith(".pdf")) name += ".pdf";
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = name;
-    a.click();
+  msg.innerHTML=`Done ✅<br>
+    <input id="rename" value="${base}-rotated"
+      style="margin-top:6px;padding:10px;width:100%;
+      border:1px solid var(--border);border-radius:10px">
+    <button id="dl" style="margin-top:10px;width:100%;
+      padding:12px;border-radius:12px;background:var(--primary);
+      color:#fff;border:none;font-weight:700">Download PDF</button>`;
+  dl.onclick=()=>{
+    let n=rename.value.trim()||`${base}-rotated`;
+    if(!n.endsWith(".pdf")) n+=".pdf";
+    const a=document.createElement("a");a.href=url;a.download=n;a.click();
   };
 }
+const angleSelect=document.getElementById("angle");
 </script>
 
 </body>

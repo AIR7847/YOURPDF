@@ -2,132 +2,186 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>PDF → JPG – PDF Toolkit</title>
+<title>PDF to JPG – YOURPDF</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 :root{
-  --bg:#0b1220; --card:#0f172a; --muted:#94a3b8;
-  --text:#e5e7eb; --accent:#22c55e; --border:#1f2937;
+  --primary:#2563eb;
+  --border:#e5e7eb;
+  --text:#0f172a;
+  --muted:#475569;
+  --bg:#ffffff;
 }
 *{box-sizing:border-box}
 body{
   margin:0;
   font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-  background:linear-gradient(180deg,#0b1220,#020617);
+  background:var(--bg);
   color:var(--text);
 }
-header{
-  padding:16px 20px;
-  border-bottom:1px solid var(--border);
-}
-header .wrap{
+
+/* HEADER */
+header{padding:24px 20px}
+.header-box{
   max-width:900px;
   margin:auto;
-  display:flex;
-  gap:12px;
-  align-items:center;
-}
-nav{margin-left:auto}
-nav a{color:var(--muted);text-decoration:none}
-nav a:hover{color:var(--text)}
-main{
-  max-width:900px;
-  margin:28px auto;
-  padding:0 20px;
-}
-.card{
-  background:linear-gradient(180deg,#0f172a,#020617);
+  padding:18px 20px;
   border:1px solid var(--border);
   border-radius:16px;
-  padding:20px;
+  text-align:center;
+  background:#f8fafc;
 }
-h1{margin:0 0 8px;font-size:1.3rem}
-p{margin:0;color:var(--muted)}
-input,button{
-  width:100%;
-  padding:12px 14px;
-  border-radius:12px;
-  border:1px solid var(--border);
-  background:#020617;
-  color:var(--text);
-  margin-top:10px;
-}
-button.primary{
-  background:linear-gradient(135deg,var(--accent),#16a34a);
+.header-box h1{margin:0;font-size:1.6rem;font-weight:800}
+.header-box p{margin:6px 0 0;color:var(--muted);font-size:.95rem}
+
+/* MAIN */
+main{max-width:900px;margin:28px auto;padding:0 20px}
+
+/* UPLOAD */
+.upload-box{
   border:none;
-  color:#052e16;
-  font-weight:800;
+  border-radius:18px;
+  padding:30px 20px;
+  text-align:center;
   cursor:pointer;
+  background:#ffffff;
 }
-.status{margin-top:12px;color:var(--muted)}
+.upload-box,*{
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.upload-plus{
+  width:52px;height:52px;margin:0 auto 10px;
+  border-radius:50%;
+  background:var(--primary);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;animation:pulse 1.8s infinite;
+}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(37,99,235,.35)}
+  70%{box-shadow:0 0 0 14px rgba(37,99,235,0)}
+  100%{box-shadow:0 0 0 0 rgba(37,99,235,0)}
+}
+.upload-text{font-weight:600}
+.upload-sub{font-size:.9rem;color:var(--muted)}
+input[type=file]{display:none}
+
+/* PREVIEW */
+.preview{
+  margin-top:18px;
+  display:none;
+  text-align:center;
+}
+.preview canvas{
+  width:110px;
+  border:1px solid var(--border);
+  border-radius:8px;
+}
+.preview-name{
+  margin-top:6px;
+  font-size:.85rem;
+  color:var(--muted);
+  word-break:break-all;
+}
+
+/* CONTROLS */
+.controls{margin-top:22px}
+button{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:none;
+  background:var(--primary);
+  color:#fff;
+  font-weight:700;
+}
+.status{margin-top:14px;color:var(--muted)}
 </style>
 </head>
 
 <body>
 
 <header>
-  <div class="wrap">
-    <strong>PDF Toolkit</strong>
-    <nav>
-      <a href="index.html">Home</a> |
-      <a href="img-to-pdf.html">Image → PDF</a>
-    </nav>
+  <div class="header-box">
+    <h1>PDF to JPG</h1>
+    <p>Convert each PDF page into JPG images</p>
   </div>
 </header>
 
 <main>
-  <div class="card">
-    <h1>PDF → JPG</h1>
-    <p>Convert each PDF page into a JPG image.</p>
 
-    <input type="file" id="file" accept="application/pdf">
+<label class="upload-box">
+  <div class="upload-plus">+</div>
+  <div class="upload-text">Choose PDF file</div>
+  <div class="upload-sub">Click to select from device</div>
+  <input type="file" id="file" accept="application/pdf">
+</label>
 
-    <button class="primary" onclick="convert()">Convert to JPG</button>
+<div class="preview" id="preview">
+  <canvas id="previewCanvas"></canvas>
+  <div class="preview-name" id="previewName"></div>
+</div>
 
-    <div id="msg" class="status"></div>
-  </div>
+<div class="controls">
+  <button onclick="convert()">Convert to JPG</button>
+</div>
+
+<div id="msg" class="status"></div>
+
 </main>
 
-<!-- PDF.js (LOCAL FILES) -->
 <script src="pdf.min.js"></script>
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = "pdf.worker.min.js";
+
+const fileInput = document.getElementById("file");
+const previewBox = document.getElementById("preview");
+const canvas = document.getElementById("previewCanvas");
+const ctx = canvas.getContext("2d");
+const nameEl = document.getElementById("previewName");
+
+fileInput.addEventListener("change", async ()=>{
+  const f = fileInput.files[0];
+  if(!f) return;
+  nameEl.textContent = f.name;
+  previewBox.style.display="block";
+  const pdf = await pdfjsLib.getDocument(URL.createObjectURL(f)).promise;
+  const page = await pdf.getPage(1);
+  const vp = page.getViewport({ scale:0.22 });
+  canvas.width = vp.width;
+  canvas.height = vp.height;
+  await page.render({ canvasContext:ctx, viewport:vp }).promise;
+});
 </script>
 
 <script>
 async function convert(){
-  const file = document.getElementById("file").files[0];
-  if(!file){
-    alert("Select a PDF");
-    return;
-  }
+  const file = fileInput.files[0];
+  if(!file){ alert("Select a PDF"); return; }
 
   const msg = document.getElementById("msg");
   msg.textContent = "Rendering pages…";
 
-  const url = URL.createObjectURL(file);
-  const pdf = await pdfjsLib.getDocument(url).promise;
+  const pdf = await pdfjsLib.getDocument(URL.createObjectURL(file)).promise;
 
-  for(let i = 1; i <= pdf.numPages; i++){
+  for(let i=1;i<=pdf.numPages;i++){
     msg.textContent = `Rendering page ${i} / ${pdf.numPages}`;
-
     const page = await pdf.getPage(i);
-    const viewport = page.getViewport({ scale: 1.5 });
+    const vp = page.getViewport({ scale:1.5 });
+    const c = document.createElement("canvas");
+    const cx = c.getContext("2d");
+    c.width = vp.width;
+    c.height = vp.height;
+    await page.render({ canvasContext:cx, viewport:vp }).promise;
 
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-
-    await page.render({ canvasContext: ctx, viewport }).promise;
-
-    canvas.toBlob(blob => {
+    c.toBlob(blob=>{
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = `page-${i}.jpg`;
       a.click();
-    }, "image/jpeg", 0.95);
+    },"image/jpeg",0.95);
   }
 
   msg.textContent = "Done ✅ (All pages downloaded)";

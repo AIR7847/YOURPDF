@@ -1,116 +1,120 @@
+<!-- png-to-jpg.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>PNG → JPG – PDF Toolkit</title>
+<title>PNG to JPG – YOURPDF</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-:root{
-  --bg:#0b1220; --card:#0f172a; --muted:#94a3b8;
-  --text:#e5e7eb; --accent:#22c55e; --border:#1f2937;
-}
+:root{--primary:#2563eb;--border:#e5e7eb;--text:#0f172a;--muted:#475569;--bg:#ffffff}
 *{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-  background:linear-gradient(180deg,#0b1220,#020617);
-  color:var(--text);
-}
-header{padding:16px 20px;border-bottom:1px solid var(--border)}
-header .wrap{max-width:900px;margin:auto;display:flex;gap:12px;align-items:center}
-nav{margin-left:auto}
-nav a{color:var(--muted);text-decoration:none}
-nav a:hover{color:var(--text)}
+body{margin:0;font-family:system-ui;background:var(--bg);color:var(--text)}
+header{padding:24px 20px}
+.header-box{max-width:900px;margin:auto;padding:18px 20px;border:1px solid var(--border);
+  border-radius:16px;text-align:center;background:#f8fafc}
+.header-box h1{margin:0;font-size:1.6rem;font-weight:800}
+.header-box p{margin:6px 0 0;color:var(--muted);font-size:.95rem}
 main{max-width:900px;margin:28px auto;padding:0 20px}
-.card{
-  background:linear-gradient(180deg,#0f172a,#020617);
-  border:1px solid var(--border);
-  border-radius:16px;
-  padding:20px;
+
+/* upload */
+.upload-box{border:none;border-radius:18px;padding:30px 20px;text-align:center;cursor:pointer}
+.upload-box,*{-webkit-tap-highlight-color:transparent;user-select:none}
+.upload-plus{width:52px;height:52px;margin:0 auto 10px;border-radius:50%;
+  background:var(--primary);color:#fff;display:flex;align-items:center;
+  justify-content:center;font-size:32px;animation:pulse 1.8s infinite}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(37,99,235,.35)}
+  70%{box-shadow:0 0 0 14px rgba(37,99,235,0)}
+  100%{box-shadow:0 0 0 0 rgba(37,99,235,0)}
 }
-h1{margin:0 0 8px;font-size:1.3rem}
-p{margin:0;color:var(--muted)}
-input,button{
-  width:100%;
-  padding:12px 14px;
-  border-radius:12px;
-  border:1px solid var(--border);
-  background:#020617;
-  color:var(--text);
-  margin-top:10px;
-}
-button.primary{
-  background:linear-gradient(135deg,var(--accent),#16a34a);
-  border:none;
-  color:#052e16;
-  font-weight:800;
-  cursor:pointer;
-}
-.status{margin-top:12px;color:var(--muted)}
+.upload-text{font-weight:600}
+.upload-sub{font-size:.9rem;color:var(--muted)}
+input[type=file]{display:none}
+
+/* preview */
+.preview-grid{margin-top:18px;display:none;display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+  gap:14px;justify-items:center}
+.preview-item{text-align:center}
+.preview-item img{width:100px;border:1px solid var(--border);border-radius:8px}
+.preview-name{margin-top:6px;font-size:.85rem;color:var(--muted)}
+
+/* controls */
+.controls{margin-top:22px}
+button{width:100%;padding:14px;border-radius:12px;border:none;
+  background:var(--primary);color:#fff;font-weight:700}
+.status{margin-top:14px;color:var(--muted)}
 </style>
 </head>
 
 <body>
 
 <header>
-  <div class="wrap">
-    <strong>PDF Toolkit</strong>
-    <nav>
-      <a href="index.html">Home</a> |
-      <a href="pdf-to-jpg.html">PDF → JPG</a>
-    </nav>
+  <div class="header-box">
+    <h1>PNG to JPG</h1>
+    <p>Convert PNG images to JPG format</p>
   </div>
 </header>
 
 <main>
-  <div class="card">
-    <h1>PNG → JPG</h1>
-    <p>Convert PNG images to JPG format.</p>
 
-    <input type="file" id="files" accept="image/png" multiple>
+<label class="upload-box">
+  <div class="upload-plus">+</div>
+  <div class="upload-text">Choose PNG images</div>
+  <div class="upload-sub">Multiple images supported</div>
+  <input type="file" id="files" accept="image/png" multiple>
+</label>
 
-    <button class="primary" onclick="convert()">Convert to JPG</button>
+<div class="preview-grid" id="preview"></div>
 
-    <div id="msg" class="status"></div>
-  </div>
+<div class="controls">
+  <button onclick="convert()">Convert to JPG</button>
+</div>
+
+<div id="msg" class="status"></div>
+
 </main>
 
 <script>
-function convert(){
-  const files = [...document.getElementById("files").files];
-  if(files.length === 0){
-    alert("Select PNG images");
-    return;
-  }
+const filesInput=document.getElementById("files");
+const grid=document.getElementById("preview");
 
-  const msg = document.getElementById("msg");
-  msg.textContent = "Converting…";
-
-  files.forEach((file, idx) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext("2d");
-
-      // White background for transparency
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
-
-      canvas.toBlob(blob => {
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = file.name.replace(/\\.png$/i, ".jpg");
-        a.click();
-      }, "image/jpeg", 0.95);
-    };
-    img.src = URL.createObjectURL(file);
+filesInput.addEventListener("change",()=>{
+  grid.innerHTML="";grid.style.display="grid";
+  [...filesInput.files].forEach(f=>{
+    const item=document.createElement("div");
+    item.className="preview-item";
+    const img=document.createElement("img");
+    img.src=URL.createObjectURL(f);
+    const name=document.createElement("div");
+    name.className="preview-name";name.textContent=f.name;
+    item.appendChild(img);item.appendChild(name);grid.appendChild(item);
   });
+});
 
-  msg.textContent = "Done ✅ (All images downloaded)";
+function convert(){
+  const files=[...filesInput.files];
+  if(files.length===0){alert("Select images");return;}
+  files.forEach(f=>{
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement("canvas");
+      c.width=img.width;c.height=img.height;
+      const ctx=c.getContext("2d");
+      ctx.fillStyle="#fff";
+      ctx.fillRect(0,0,c.width,c.height);
+      ctx.drawImage(img,0,0);
+      c.toBlob(b=>{
+        const a=document.createElement("a");
+        a.href=URL.createObjectURL(b);
+        a.download=f.name.replace(/\.png$/i,"")+".jpg";
+        a.click();
+      },"image/jpeg",0.95);
+    };
+    img.src=URL.createObjectURL(f);
+  });
+  document.getElementById("msg").textContent="Done ✅";
 }
 </script>
 
