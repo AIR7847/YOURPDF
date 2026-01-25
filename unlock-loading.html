@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>YOURPDF is starting…</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body{
+      margin:0;
+      height:100vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      font-family:system-ui,sans-serif;
+      background:#f8fafc;
+    }
+    .box{
+      text-align:center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="box">
+  <h2>YOURPDF is starting…</h2>
+  <p>Server waking up, please wait</p>
+  <p>⏱️ <b><span id="sec">0</span> seconds</b></p>
+</div>
+
+<script>
+let s = 0;
+let done = false;
+
+const t = setInterval(()=>{
+  s++;
+  document.getElementById("sec").innerText = s;
+
+  if(s >= 20 && !done){
+    done = true;
+    window.location.href = "https://yourpdf-unlock.onrender.com/";
+  }
+},1000);
+
+fetch("https://yourpdf-unlock.onrender.com/", {mode:"no-cors"})
+  .then(()=>{
+    if(!done){
+      done = true;
+      clearInterval(t);
+      window.location.href = "https://yourpdf-unlock.onrender.com/";
+    }
+  })
+  .catch(()=>{});
+</script>
+
+</body>
+</html>
