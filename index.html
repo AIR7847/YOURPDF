@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <title>YOURPDF – Free PDF Tools</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
 <style>
@@ -42,83 +41,28 @@ header .wrap{
   justify-content:center;
 }
 
-/* BRAND WRAP */
+/* BRAND */
 .brand-wrap{
   position:relative;
   display:flex;
   align-items:center;
-  justify-content:center;
   gap:14px;
 }
-
-/* LEFT STAIRCASE */
-.brand-wrap::before{
-  content:"";
-  position:absolute;
-  left:-74px;
-  bottom:2px;
-  width:64px;
-  height:44px;
-  background:
-    linear-gradient(to right, var(--brick-soft) 100%, transparent 0),
-    linear-gradient(to right, var(--brick-soft) 70%, transparent 0),
-    linear-gradient(to right, var(--brick-soft) 40%, transparent 0);
-  background-size:
-    100% 10px,
-    70% 10px,
-    40% 10px;
-  background-position:
-    0 32px,
-    14px 18px,
-    28px 6px;
-  background-repeat:no-repeat;
-}
-
-/* RIGHT STAIRCASE */
-.brand-wrap::after{
-  content:"";
-  position:absolute;
-  right:-74px;
-  bottom:2px;
-  width:64px;
-  height:44px;
-  background:
-    linear-gradient(to left, var(--brick-soft) 100%, transparent 0),
-    linear-gradient(to left, var(--brick-soft) 70%, transparent 0),
-    linear-gradient(to left, var(--brick-soft) 40%, transparent 0);
-  background-size:
-    100% 10px,
-    70% 10px,
-    40% 10px;
-  background-position:
-    0 32px,
-    -14px 18px,
-    -28px 6px;
-  background-repeat:no-repeat;
-}
-
-/* BRAND TEXT */
 .brand-left,
 .brand-right{
   font-size:1.6rem;
   font-weight:800;
   letter-spacing:.4px;
-  position:relative;
   z-index:2;
 }
-
-/* LOGO */
 .logo{
   width:72px;
   height:72px;
-  flex-shrink:0;
-  position:relative;
   z-index:2;
 }
 
+/* HERO */
 main{max-width:1100px;margin:auto;padding:0 20px}
-
-/* ---------- HERO ---------- */
 .hero{
   padding:56px 0 40px;
   text-align:center;
@@ -136,7 +80,7 @@ main{max-width:1100px;margin:auto;padding:0 20px}
   line-height:1.6;
 }
 
-/* ---------- TOOLS GRID ---------- */
+/* GRID */
 .section{padding:28px 0}
 .grid{
   display:grid;
@@ -148,18 +92,14 @@ main{max-width:1100px;margin:auto;padding:0 20px}
   border:1px solid var(--border);
   border-radius:16px;
   padding:20px;
-  transition:transform .15s ease, box-shadow .15s ease;
+  transition:.15s ease;
 }
 .card:hover{
   transform:translateY(-5px);
   box-shadow:0 10px 26px rgba(0,0,0,.09);
 }
 .card h3{margin:0 0 8px}
-.card p{
-  margin:0;
-  color:var(--muted);
-  font-size:.95rem;
-}
+.card p{margin:0;color:var(--muted);font-size:.95rem}
 .card a{
   display:inline-block;
   margin-top:14px;
@@ -168,7 +108,7 @@ main{max-width:1100px;margin:auto;padding:0 20px}
   text-decoration:none;
 }
 
-/* ---------- FOOTER ---------- */
+/* FOOTER */
 footer{
   border-top:1px solid var(--border);
   padding:20px;
@@ -176,7 +116,6 @@ footer{
   text-align:center;
   font-size:.95rem;
 }
-
 @media(max-width:640px){
   .hero h1{font-size:2rem}
 }
@@ -188,10 +127,9 @@ footer{
 <header>
   <div class="wrap">
     <div class="brand-wrap">
-
       <span class="brand-left">YOUR</span>
 
-      <!-- YP MONOGRAM LOGO -->
+      <!-- LOGO -->
       <svg class="logo" viewBox="0 0 120 120" aria-label="YOURPDF logo">
         <defs>
           <linearGradient id="ypGrad" x1="0" y1="0" x2="1" y2="1">
@@ -199,42 +137,19 @@ footer{
             <stop offset="100%" stop-color="#0ea5e9"/>
           </linearGradient>
         </defs>
-
         <rect x="10" y="10" width="100" height="100" rx="24" fill="url(#ypGrad)"/>
-
-        <!-- Y -->
-        <path d="M38 34l12 18v22"
-              stroke="#ffffff"
-              stroke-width="8"
-              stroke-linecap="round"
-              fill="none"/>
-        <path d="M62 34l-12 18"
-              stroke="#ffffff"
-              stroke-width="8"
-              stroke-linecap="round"
-              fill="none"/>
-
-        <!-- P -->
-        <path d="M62 40v40"
-              stroke="#ffffff"
-              stroke-width="8"
-              stroke-linecap="round"
-              fill="none"/>
-        <path d="M62 40h16a12 12 0 0 1 0 24H62"
-              stroke="#ffffff"
-              stroke-width="8"
-              stroke-linecap="round"
-              fill="none"/>
+        <path d="M38 34l12 18v22" stroke="#fff" stroke-width="8" stroke-linecap="round" fill="none"/>
+        <path d="M62 34l-12 18" stroke="#fff" stroke-width="8" stroke-linecap="round" fill="none"/>
+        <path d="M62 40v40" stroke="#fff" stroke-width="8" stroke-linecap="round" fill="none"/>
+        <path d="M62 40h16a12 12 0 0 1 0 24H62" stroke="#fff" stroke-width="8" stroke-linecap="round" fill="none"/>
       </svg>
 
       <span class="brand-right">PDF</span>
-
     </div>
   </div>
 </header>
 
 <main>
-
   <section class="hero">
     <h1>YOURPDF</h1>
     <p>
@@ -281,12 +196,12 @@ footer{
         <p>Convert PDF pages into JPG images.</p>
         <a href="pdf-to-jpg.html">Open Tool →</a>
       </div>
+
+      <!-- ✅ UPDATED LINK (NO DIRECT BACKEND) -->
       <div class="card">
-  <h3>PDF Password Remover</h3>
-  <p>Remove password from protected PDFs securely (legal use only).</p>
-  <a href="https://yourpdf-unlock.onrender.com" target="_blank">
-    Open Tool →
-  </a>
+        <h3>PDF Password Remover</h3>
+        <p>Remove password from protected PDFs securely (legal use only).</p>
+        <a href="unlock-loading.html">Open Tool →</a>
       </div>
 
     </div>
@@ -294,26 +209,26 @@ footer{
 </main>
 
 <footer>
-  © YOURPDF • KD(Creator) • Privacy-first
+  © YOURPDF • KD (Creator) • Privacy-first
 </footer>
-  <script>
+
+<script>
 let sessionStart = Date.now();
-let sessionSent = false;   // 🔒 important flag
+let sessionSent = false;
 
 function sendSession(reason){
-  if (sessionSent) return; // already sent → stop
+  if(sessionSent) return;
   sessionSent = true;
 
-  const duration = Math.round((Date.now() - sessionStart) / 1000);
-
+  const duration = Math.round((Date.now() - sessionStart)/1000);
   const data = {
-    duration: duration,
-    reason: reason,
-    userAgent: navigator.userAgent,
-    screen: `${screen.width}x${screen.height}`,
-    network: navigator.connection
-  ? `${navigator.connection.effectiveType} (${navigator.connection.downlink || "?"} Mbps)`
-  : "unknown"
+    duration,
+    reason,
+    userAgent:navigator.userAgent,
+    screen:`${screen.width}x${screen.height}`,
+    network:navigator.connection
+      ? `${navigator.connection.effectiveType} (${navigator.connection.downlink||"?"} Mbps)`
+      : "unknown"
   };
 
   navigator.sendBeacon(
@@ -322,18 +237,11 @@ function sendSession(reason){
   );
 }
 
-// Tab close / refresh
-window.addEventListener("beforeunload", () => {
-  sendSession("close");
+window.addEventListener("beforeunload",()=>sendSession("close"));
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="hidden") sendSession("hidden");
 });
-
-// Tab background (only if not already sent)
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "hidden") {
-    sendSession("hidden");
-  }
-});
-  </script>
+</script>
 
 </body>
-</html>
+                                                                   </html>
