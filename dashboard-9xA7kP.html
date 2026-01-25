@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>YOURPDF – Admin Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background:#f8fafc;
+  color:#0f172a;
+}
+header{
+  padding:16px 20px;
+  background:#ffffff;
+  border-bottom:1px solid #e5e7eb;
+}
+main{
+  max-width:1000px;
+  margin:20px auto;
+  padding:0 16px;
+}
+h1{margin:0 0 10px}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:14px;
+}
+.card{
+  background:#ffffff;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:16px;
+}
+.card h3{
+  margin:0 0 6px;
+  font-size:1rem;
+  color:#475569;
+}
+.card .value{
+  font-size:1.8rem;
+  font-weight:800;
+}
+
+.list{
+  margin-top:8px;
+  font-size:.9rem;
+  color:#475569;
+}
+.bar{
+  height:8px;
+  background:#e5e7eb;
+  border-radius:6px;
+  overflow:hidden;
+  margin-top:6px;
+}
+.bar span{
+  display:block;
+  height:100%;
+  background:#2563eb;
+}
+
+footer{
+  text-align:center;
+  color:#64748b;
+  font-size:.85rem;
+  margin:24px 0;
+}
+</style>
+</head>
+
+<body>
+
+<!-- 🔐 ADMIN PASSWORD GATE -->
+<script>
+(function () {
+  const PASSWORD = "Ashayadav"; // 🔑 change if needed
+  const input = prompt("Admin password:");
+  if (input !== PASSWORD) {
+    alert("Access denied");
+    document.body.innerHTML = "";
+    throw new Error("Unauthorized");
+  }
+})();
+</script>
+
+<header>
+  <h1>YOURPDF – Dashboard</h1>
+  <div>Live usage statistics (Admin only)</div>
+</header>
+
+<main>
+
+  <!-- TOP STATS -->
+  <div class="grid">
+    <div class="card">
+      <h3>Total Sessions</h3>
+      <div class="value" id="total">–</div>
+    </div>
+
+    <div class="card">
+      <h3>Average Time (sec)</h3>
+      <div class="value" id="avg">–</div>
+    </div>
+
+    <div class="card">
+      <h3>Mobile Users</h3>
+      <div class="value" id="mobile">–</div>
+    </div>
+
+    <div class="card">
+      <h3>Desktop Users</h3>
+      <div class="value" id="desktop">–</div>
+    </div>
+  </div>
+
+  <!-- NETWORK -->
+  <div class="card" style="margin-top:16px">
+    <h3>Network Distribution</h3>
+    <div id="networks" class="list"></div>
+  </div>
+
+  <!-- 🗺️ STATE WISE -->
+  <div class="card" style="margin-top:16px">
+    <h3>State / Location Distribution</h3>
+    <div id="states" class="list"></div>
+  </div>
+
+</main>
+
+<footer>
+  YOURPDF • Internal analytics
+</footer>
+
+<script>
+async function loadStats(){
+  const res = await fetch("https://yourpdf-backend.onrender.com/stats");
+  const data = await res.json();
+
+  document.getElementById("total").textContent = data.totalSessions;
+  document.getElementById("avg").textContent = data.avgTime;
+  document.getElementById("mobile").textContent = data.mobile;
+  document.getElementById("desktop").textContent = data.desktop;
+
+  /* NETWORKS */
+  const netBox = document.getElementById("networks");
+  netBox.innerHTML = "";
+  const total = data.totalSessions || 1;
+
+  for(const key in data.networks){
+    const count = data.networks[key];
+    const percent = Math.round((count / total) * 100);
+    const row = document.createElement("div");
+    row.innerHTML = `
+      <div>${key} – ${count}</div>
+      <div class="bar"><span style="width:${percent}%"></span></div>
+    `;
+    netBox.appendChild(row);
+  }
+
+  /* STATES */
+  const stateBox = document.getElementById("states");
+  stateBox.innerHTML = "";
+
+  if(data.states){
+    for(const state in data.states){
+      const count = data.states[state];
+      const percent = Math.round((count / total) * 100);
+      const row = document.createElement("div");
+      row.innerHTML = `
+        <div>${state} – ${count}</div>
+        <div class="bar"><span style="width:${percent}%"></span></div>
+      `;
+      stateBox.appendChild(row);
+    }
+  } else {
+    stateBox.innerHTML = "<div>No state data yet</div>";
+  }
+}
+
+loadStats();
+</script>
+
+</body>
+</html>
